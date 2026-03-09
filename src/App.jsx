@@ -2048,9 +2048,17 @@ export default function HestiaApp() {
     setScreen("dashboard");
   };
 
-  const handleUpgrade = () => {
-    setIsPremium(true);
-  };
+  const handleUpgrade = async () => {
+
+  const res = await fetch("/api/create-checkout-session", {
+    method: "POST",
+  });
+
+  const data = await res.json();
+
+  window.location = data.url;
+
+};
 
   return (
     <div>
