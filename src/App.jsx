@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import heroImg from "./assets/hero-home.jpg";
+import hestiaLogo from "./assets/hestia-logo.png";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { supabase } from "./lib/supabase.js";
 
