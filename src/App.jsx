@@ -840,7 +840,7 @@ const Questionnaire = ({ lang, onComplete }) => {
     <div className="min-h-screen bg-cream-light flex items-center justify-center px-5 py-8">
       <div className="max-w-lg w-full">
         <div className="text-center mb-8">
-          <span className="font-serif text-base tracking-widest text-warm-800 italic">HESTIA</span>
+          <div className="flex items-center justify-center gap-2"><img src={hestiaLogo} alt="Hestia" className="h-7 w-7" /><span className="font-serif text-base tracking-widest text-warm-800 italic">HESTIA</span></div>
         </div>
 
         {/* Progress bar */}
