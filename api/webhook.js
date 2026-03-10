@@ -16,9 +16,17 @@ module.exports = async function handler(req, res) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
-    console.log("✅ Paiement reçu pour:", session.customer_email);
-    // → Ici tu mettras Supabase : user.isPremium = true
-  }
+    const { createClient } = require("@supabase/supabase-js");
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
+
+// Dans le if checkout.session.completed :
+await supabase
+  .from("users")
+  .upsert({ email: session.customer_email, is_premium: true });
+
 
   res.status(200).json({ received: true });
 };
