@@ -1,2 +1,2 @@
-# Hestia-access-hub
+# hestia-access-hub
 Home exchange platform powered by AI matching
