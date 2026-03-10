@@ -706,11 +706,48 @@ const LandingPage = ({ lang, setLang, onStart }) => {
   );
 };
 
-// ── AUTH PAGE ────────────────────────────────────────────────
+// ── AUTH PAGE (SUPABASE) ─────────────────────────────────────
 const AuthPage = ({ lang, onAuth }) => {
   const [isLogin, setIsLogin] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      if (isLogin) {
+        const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
+        if (err) throw err;
+        // onAuth will be triggered by onAuthStateChange in HestiaApp
+      } else {
+        if (!name.trim()) { setError(lang === "fr" ? "Prénom requis" : "Name required"); setLoading(false); return; }
+        const { data, error: err } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { name } },
+        });
+        if (err) throw err;
+        // Create profile in users table
+        if (data.user) {
+          await supabase.from("users").upsert({
+            id: data.user.id,
+            email,
+            name,
+            is_premium: false,
+            hestia_points: 0,
+          });
+        }
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-cream-light flex items-center justify-center px-5">
@@ -723,6 +760,11 @@ const AuthPage = ({ lang, onAuth }) => {
         </div>
 
         <div className="bg-white rounded-3xl shadow-card p-8 border border-warm-100">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 font-sans text-sm">
+              {error}
+            </div>
+          )}
           {!isLogin && (
             <input
               className="w-full px-4 py-3.5 rounded-xl border border-warm-200 bg-cream-light/50 text-warm-800 font-sans text-sm outline-none focus:border-terracotta/50 focus:ring-2 focus:ring-terracotta/10 transition-all mb-3"
@@ -742,16 +784,22 @@ const AuthPage = ({ lang, onAuth }) => {
             className="w-full px-4 py-3.5 rounded-xl border border-warm-200 bg-cream-light/50 text-warm-800 font-sans text-sm outline-none focus:border-terracotta/50 focus:ring-2 focus:ring-terracotta/10 transition-all mb-6"
             placeholder={lang === "fr" ? "Mot de passe" : "Password"}
             type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
           />
           <button
-            className="w-full bg-terracotta text-white font-sans font-semibold text-sm py-3.5 rounded-xl hover:bg-terracotta-dark hover:shadow-soft transition-all duration-300 active:scale-[0.98]"
-            onClick={() => onAuth(name || "Vous", email)}
+            className="w-full bg-terracotta text-white font-sans font-semibold text-sm py-3.5 rounded-xl hover:bg-terracotta-dark hover:shadow-soft transition-all duration-300 active:scale-[0.98] disabled:opacity-50"
+            onClick={handleSubmit}
+            disabled={loading}
           >
-            {isLogin ? (lang === "fr" ? "Se connecter" : "Log in") : (lang === "fr" ? "Créer mon compte" : "Create account")}
+            {loading
+              ? "..."
+              : isLogin ? (lang === "fr" ? "Se connecter" : "Log in") : (lang === "fr" ? "Créer mon compte" : "Create account")}
           </button>
           <p
             className="font-sans text-warm-400 text-sm text-center mt-5 cursor-pointer hover:text-terracotta transition-colors"
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => { setIsLogin(!isLogin); setError(""); }}
           >
             {isLogin
               ? (lang === "fr" ? "Pas encore de compte ? Créer un profil" : "No account? Create one")
