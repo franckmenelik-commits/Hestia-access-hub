@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import heroImg from "./assets/hero-home.jpg";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { supabase } from "./lib/supabase.js";
 
 // ============================================================
 // STACK GRATUIT :
