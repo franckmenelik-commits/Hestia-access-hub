@@ -614,13 +614,13 @@ const LandingPage = ({ onOpenAuth, onOpenWaitlist, onNavigate }) => {
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-warm-900 text-center mb-16">Ce que nos membres disent</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { name: "Sophie L.", city: "Lyon", avatar: "👩‍🦰", text: "Notre échange avec une famille à Lisbonne a été magique. Le matching est incroyablement précis — on avait les mêmes valeurs, les mêmes envies. Nos enfants sont devenus amis !", rating: 5 },
-              { name: "Marc & Julie R.", city: "Montréal", avatar: "👫", text: "Après 4 échanges via Hestia, on ne réserve plus d'hôtels. La confiance est immédiate grâce au Passport et aux avis vérifiés. Le contrat automatique rassure tout le monde.", rating: 5 },
-              { name: "Kenji H.", city: "Tokyo", avatar: "🧑‍💻", text: "En tant que digital nomad, Hestia m'a permis de vivre 3 mois à Barcelone en échangeant mon appart de Shinjuku. Le score de compatibilité ne ment pas — 94% et c'était parfait.", rating: 5 },
+              { name: "Sophie L.", city: "Lyon", initials: "S", text: "Notre échange avec une famille à Lisbonne a été magique. Le matching est incroyablement précis — on avait les mêmes valeurs, les mêmes envies. Nos enfants sont devenus amis !", rating: 5 },
+              { name: "Marc & Julie R.", city: "Montréal", initials: "MJ", text: "Après 4 échanges via Hestia, on ne réserve plus d'hôtels. La confiance est immédiate grâce au Passport et aux avis vérifiés. Le contrat automatique rassure tout le monde.", rating: 5 },
+              { name: "Kenji H.", city: "Tokyo", initials: "K", text: "En tant que digital nomad, Hestia m'a permis de vivre 3 mois à Barcelone en échangeant mon appart de Shinjuku. Le score de compatibilité ne ment pas — 94% et c'était parfait.", rating: 5 },
             ].map((t, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="bg-cream-light/50 rounded-2xl p-6 border border-warm-100">
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="bg-cream-light/50 rounded-2xl p-5 md:p-6 border border-warm-100">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-terracotta/10 border border-terracotta/20 flex items-center justify-center text-xl">{t.avatar}</div>
+                  <div className="w-11 h-11 md:w-12 md:h-12 rounded-full bg-terracotta/10 border border-terracotta/20 flex items-center justify-center font-sans font-bold text-terracotta text-sm flex-shrink-0">{t.initials}</div>
                   <div>
                     <p className="font-sans text-sm font-semibold text-warm-800">{t.name}</p>
                     <p className="font-sans text-xs text-warm-400">📍 {t.city}</p>
