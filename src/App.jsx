@@ -738,9 +738,11 @@ const AuthPage = ({ lang, onAuth, confirmationBanner }) => {
   const handleSubmit = async () => {
     setError("");
     setLoading(true);
+    console.log("[Hestia Auth]", isLogin ? "LOGIN" : "SIGNUP", { email });
     try {
       if (isLogin) {
         const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
+        console.log("[Hestia Auth] Login result:", { data, error: err });
         if (err) throw err;
         // onAuth will be triggered by onAuthStateChange in HestiaApp
       } else {
@@ -754,6 +756,7 @@ const AuthPage = ({ lang, onAuth, confirmationBanner }) => {
             emailRedirectTo: "https://join-hestia.lovable.app/",
           },
         });
+        console.log("[Hestia Auth] Signup result:", { data, error: err });
         if (err) throw err;
         // Create profile in users table
         if (data.user) {
@@ -763,14 +766,15 @@ const AuthPage = ({ lang, onAuth, confirmationBanner }) => {
             name,
             is_premium: false,
             hestia_points: 0,
-          });
+          }).then(res => console.log("[Hestia Auth] Profile upsert:", res));
         }
         // Show success message instead of redirecting
         setSignupSuccess(true);
         setSignupEmail(email);
       }
     } catch (err) {
-      setError(translateError(err.message));
+      console.error("[Hestia Auth] Error:", err);
+      setError(translateError(err.message || "Une erreur est survenue. Réessayez."));
     } finally {
       setLoading(false);
     }
@@ -1512,12 +1516,15 @@ export default function HestiaApp() {
   useEffect(() => {
     // Check for email confirmation redirect (hash contains type=signup or type=recovery)
     const hash = window.location.hash;
+    console.log("[Hestia Auth] URL hash on load:", hash);
     if (hash && (hash.includes("type=signup") || hash.includes("type=magiclink"))) {
-      // User just confirmed their email — show login with success banner
-      setConfirmationBanner(true);
-      setScreen("auth");
-      // Clean up URL hash
-      window.history.replaceState(null, "", window.location.pathname);
+      // Let Supabase process the token first, then show login with success banner
+      supabase.auth.getSession().then(() => {
+        setConfirmationBanner(true);
+        setScreen("auth");
+        // Clean up URL hash after Supabase has processed it
+        window.history.replaceState(null, "", window.location.pathname);
+      });
     }
   }, []);
 
