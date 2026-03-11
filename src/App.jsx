@@ -708,13 +708,32 @@ const LandingPage = ({ lang, setLang, onStart }) => {
 };
 
 // ── AUTH PAGE (SUPABASE) ─────────────────────────────────────
-const AuthPage = ({ lang, onAuth }) => {
+const AuthPage = ({ lang, onAuth, confirmationBanner }) => {
   const [isLogin, setIsLogin] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [signupSuccess, setSignupSuccess] = useState(false);
+  const [signupEmail, setSignupEmail] = useState("");
+
+  const translateError = (msg) => {
+    if (!msg) return msg;
+    const lower = msg.toLowerCase();
+    if (lower.includes("user already registered") || lower.includes("already been registered"))
+      return "Email déjà utilisé";
+    if (lower.includes("password") && (lower.includes("short") || lower.includes("at least")))
+      return "Mot de passe trop court (minimum 6 caractères)";
+    if (lower.includes("invalid login credentials") || lower.includes("invalid email or password"))
+      return "Email ou mot de passe incorrect";
+    if (lower.includes("invalid email"))
+      return "Adresse email invalide";
+    if (lower.includes("signup is not allowed") || lower.includes("signups not allowed"))
+      return "Les inscriptions sont temporairement désactivées";
+    if (lang === "fr") return msg;
+    return msg;
+  };
 
   const handleSubmit = async () => {
     setError("");
@@ -726,10 +745,14 @@ const AuthPage = ({ lang, onAuth }) => {
         // onAuth will be triggered by onAuthStateChange in HestiaApp
       } else {
         if (!name.trim()) { setError(lang === "fr" ? "Prénom requis" : "Name required"); setLoading(false); return; }
+        if (password.length < 6) { setError("Mot de passe trop court (minimum 6 caractères)"); setLoading(false); return; }
         const { data, error: err } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { name } },
+          options: {
+            data: { name },
+            emailRedirectTo: "https://join-hestia.lovable.app/",
+          },
         });
         if (err) throw err;
         // Create profile in users table
@@ -742,13 +765,46 @@ const AuthPage = ({ lang, onAuth }) => {
             hestia_points: 0,
           });
         }
+        // Show success message instead of redirecting
+        setSignupSuccess(true);
+        setSignupEmail(email);
       }
     } catch (err) {
-      setError(err.message);
+      setError(translateError(err.message));
     } finally {
       setLoading(false);
     }
   };
+
+  // Show signup success screen
+  if (signupSuccess) {
+    return (
+      <div className="min-h-screen bg-cream-light flex items-center justify-center px-5">
+        <div className="max-w-md w-full">
+          <div className="text-center mb-10">
+            <div className="flex items-center justify-center gap-2 mb-3"><img src={hestiaLogo} alt="Hestia" className="h-8 w-8" /><span className="font-serif text-xl tracking-widest text-warm-800 italic">HESTIA</span></div>
+          </div>
+          <div className="bg-white rounded-3xl shadow-card p-8 border border-warm-100 text-center">
+            <div className="text-5xl mb-4">📬</div>
+            <h2 className="font-serif text-2xl font-bold text-warm-900 mb-3">
+              {lang === "fr" ? "Vérifiez votre boîte mail" : "Check your inbox"}
+            </h2>
+            <p className="font-sans text-warm-500 text-sm leading-relaxed mb-6">
+              {lang === "fr"
+                ? `Un email de confirmation a été envoyé à ${signupEmail}. Vérifiez votre boîte mail pour activer votre compte.`
+                : `A confirmation email has been sent to ${signupEmail}. Check your inbox to activate your account.`}
+            </p>
+            <button
+              className="font-sans text-sm text-terracotta hover:underline cursor-pointer"
+              onClick={() => { setSignupSuccess(false); setIsLogin(true); setError(""); }}
+            >
+              {lang === "fr" ? "← Retour à la connexion" : "← Back to login"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-cream-light flex items-center justify-center px-5">
@@ -761,6 +817,12 @@ const AuthPage = ({ lang, onAuth }) => {
         </div>
 
         <div className="bg-white rounded-3xl shadow-card p-8 border border-warm-100">
+          {/* Email confirmation banner */}
+          {confirmationBanner && (
+            <div className="bg-sage/10 border border-sage/30 text-sage-dark rounded-xl px-4 py-3 mb-4 font-sans text-sm flex items-center gap-2">
+              <span>✅</span> {lang === "fr" ? "Email confirmé ! Connectez-vous maintenant." : "Email confirmed! Log in now."}
+            </div>
+          )}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 font-sans text-sm">
               {error}
@@ -787,15 +849,21 @@ const AuthPage = ({ lang, onAuth }) => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+            onKeyDown={(e) => e.key === "Enter" && !loading && handleSubmit()}
           />
           <button
-            className="w-full bg-terracotta text-white font-sans font-semibold text-sm py-3.5 rounded-xl hover:bg-terracotta-dark hover:shadow-soft transition-all duration-300 active:scale-[0.98] disabled:opacity-50"
+            className="w-full bg-terracotta text-white font-sans font-semibold text-sm py-3.5 rounded-xl hover:bg-terracotta-dark hover:shadow-soft transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             onClick={handleSubmit}
             disabled={loading}
           >
+            {loading && (
+              <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            )}
             {loading
-              ? "..."
+              ? (lang === "fr" ? "Chargement..." : "Loading...")
               : isLogin ? (lang === "fr" ? "Se connecter" : "Log in") : (lang === "fr" ? "Créer mon compte" : "Create account")}
           </button>
           <p
